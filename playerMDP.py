@@ -15,33 +15,27 @@ class PlayerMDP:
         self.discountFactor = discountFactor
         self.errorPrecision = errorPrecision
         self.policy = policy
-        self.rewards = {}  # une structure qui stocke la valeur moyenne d'exécuter une action depuis un état donné.
+        self.reward = {}  # une structure qui stocke la valeur moyenne d'exécuter une action depuis un état donné.
         self.transition = {}  # etat en plus, ajouter pour chaque valeur rencontrée
         # Chercher le fichier => parsing => function de récompense et transition
         self.learn('resources/transition-log.txt')
 
-    def BelmanValueOf(transition, reward, s, a, defaultValues, gamma=0.99):
-        expectedGains = 0
-        for sp in transition[s][a]:
-            expectedGains += transition[s][a][sp] * defaultValues[sp]
-        return reward[s][a] + gamma * expectedGains
-
     def actions(self, s):
-        return list(self[s].keys())
+        return list(self.transition[s].keys())
 
     def valueIteration(self, reward, gamma=0.99, epsilon=0.01):
-        pi = {s: self.actions(self, s)[0] for s in self}
-        values = {s: 0.0 for s in self}
+        pi = {s: self.actions(s)[0] for s in self.transition}
+        values = {s: 0.0 for s in self.transition}
         maxDiffValue = epsilon + 1
         while maxDiffValue > epsilon:
             # for each state
             maxDiffValue = 0.0
-            values = {s: 0.0 for s in self}
-            for s in self:
-                bestValue = self.BelmanValueOf(self, reward, s, pi[s], values, gamma)
+            values = {s: 0.0 for s in self.transition}
+            for s in self.transition:
+                bestValue = BelmanValueOf(self.transition, reward, s, pi[s], values, gamma)
                 # search the best couple action / value
-                for a in self[s]:
-                    value = self.BelmanValueOf(self, reward, s, a, values)
+                for a in self.transition[s]:
+                    value = BelmanValueOf(self.transition, reward, s, a, values)
                     if value > bestValue:
                         bestValue = value
                         pi[s] = a
@@ -71,7 +65,28 @@ class PlayerMDP:
             reachedState = t[2]
             reward = float(t[3])
 
+            if initState not in self.reward.keys():
+                self.reward[initState] = {}
+            if action not in self.reward[initState].keys():
+                self.reward[initState][action] = reward
+
         f.close()
+
+
+def BelmanValueOf(transition, reward, s, a, defaultValues, gamma=0.99):
+    """
+    :param transition:
+    :param reward:
+    :param s:
+    :param a:
+    :param defaultValues:
+    :param gamma:  discountFactor
+    :return:
+    """
+    expectedGains = 0
+    for sp in transition[s][a]:
+        expectedGains += transition[s][a][sp] * defaultValues[sp]
+    return reward[s][a] + gamma * expectedGains
 
 
 def main():

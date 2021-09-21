@@ -70,6 +70,7 @@ class PlayerMDP:
             action = t[1]
             reachedState = t[2]
             reward = float(t[3])
+            #coucou
 
         f.close()
 

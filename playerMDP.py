@@ -70,7 +70,23 @@ class PlayerMDP:
                 self.reward[initState] = {}
             if action not in self.reward[initState].keys():
                 self.reward[initState][action] = reward
-
+            if initState not in self.transition.keys():
+                self.transition[initState] = {}
+            if action not in self.transition[initState].keys():
+                self.transition[initState][action] = {}
+            if reachedState not in self.transition[initState][action].keys():
+                self.transition[initState][action][reachedState] = 1
+            if reachedState in self.transition[initState][action].keys():
+                self.transition[initState][action][reachedState] = self.transition[initState][action][reachedState]+1
+        #calcul frequence
+        for key,value in self.transition.items():
+            for k2,v2 in value.items():
+                total = 0
+                for k3, v3 in v2.items():
+                    total += v3
+                for k3, v3 in v2.items():
+                    result = round(v3 / total, 2)
+                    self.transition[key][k2][k3]= result
         f.close()
 
 
@@ -93,7 +109,8 @@ def BelmanValueOf(transition, reward, s, a, defaultValues, gamma=0.99):
 def main():
     # passer le fichier policy
     player = PlayerMDP()
-
+    player.learn("resources/transition-log.txt")
+    player.valueIteration(player.reward)
 
 # Activate default interface :
 
